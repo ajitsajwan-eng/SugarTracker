@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Sugar Tracker - Multi User</title>
+    
+    <!-- PWA Meta Tags for iOS & Android -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#208091">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sugar Tracker">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23208091' width='180' height='180' rx='40'/><text x='50%' y='50%' font-size='90' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>📊</text></svg>">
+    
+    <style>
+        :root {
+            --color-primary: #208091;
+            --color-primary-hover: #1a6478;
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text: #1f2937;
+            --color-text-light: #6b7280;
+            --color-border: #e5e7eb;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            padding: var(--spacing-md);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* LOGIN PAGE STYLES */
+        #login-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--spacing-md);
+        }
+
+        .login-box {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: var(--spacing-lg);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .login-tabs {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .login-tab {
+            flex: 1;
+            padding: var(--spacing-md);
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-light);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s ease;
+        }
+
+        .login-tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .login-form {
+            display: none;
+        }
+
+        .login-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-text);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-size: 16px;
+            color: var(--color-text);
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(32, 128, 145, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: var(--spacing-md);
+        }
+
+        .login-button:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        #app-page {
+            display: none;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--color-text-light);
+        }
+
+        .user-info strong {
+            font-size: 16px;
+            color: var(--color-primary);
+        }
+
+        .logout-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: var(--color-danger);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #dc2626;
+        }
+
+        header {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .subtitle {
+            color: var(--color-text-light);
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-divider {
+            text-align: center;
+            margin: var(--spacing-lg) 0;
+            position: relative;
+        }
+
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--color-primary), transparent);
+        }
+
+        .section-divider h2 {
+            background: var(--color-bg);
+            position: relative;
+            display: inline-block;
+            padding: 0 var(--spacing-md);
+            font-size: 18px;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-text);
+        }
+
+        input[type="number"],
+        input[type="time"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-size: 16px;
+            color: var(--color-text);
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(32, 128, 145, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: var(--spacing-md);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn-success {
+            background-color: var(--color-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-danger {
+            background-color: var(--color-danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--color-primary), #16a394);
+            color: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .summary-card.warning {
+            background: linear-gradient(135deg, var(--color-warning), #d97706);
+        }
+
+        .summary-card.danger {
+            background: linear-gradient(135deg, var(--color-danger), #dc2626);
+        }
+
+        .summary-card.success {
+            background: linear-gradient(135deg, var(--color-success), #16a34a);
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: var(--spacing-sm) 0;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-bottom: var(--spacing-lg);
+            display: block;
+            width: 100%;
+        }
+
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100%;
+        }
+
+        .readings-list {
+            margin-top: var(--spacing-lg);
+        }
+
+        .reading-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .reading-item:last-child {
+            border-bottom: none;
+        }
+
+        .reading-time {
+            color: var(--color-text-light);
+            font-size: 14px;
+        }
+
+        .reading-value {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 var(--spacing-md);
+        }
+
+        .reading-value.low {
+            color: var(--color-danger);
+        }
+
+        .reading-value.normal {
+            color: var(--color-success);
+        }
+
+        .reading-value.high {
+            color: var(--color-warning);
+        }
+
+        .reading-notes {
+            color: var(--color-text-light);
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--color-danger);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+        }
+
+        .delete-btn:hover {
+            opacity: 0.7;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--color-text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: var(--spacing-sm);
+        }
+
+        .status-indicator.low {
+            background-color: var(--color-danger);
+        }
+
+        .status-indicator.normal {
+            background-color: var(--color-success);
+        }
+
+        .status-indicator.high {
+            background-color: var(--color-warning);
+        }
+
+        .grid-container {
+            overflow-x: auto;
+            margin-top: var(--spacing-lg);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background-color: var(--color-bg);
+        }
+
+        th {
+            padding: var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-text);
+            border-bottom: 2px solid var(--color-border);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background-color: #f3f4f6;
+        }
+
+        td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .glucose-value {
+            font-weight: 600;
+        }
+
+        .glucose-value.low {
+            color: var(--color-danger);
+        }
+
+        .glucose-value.normal {
+            color: var(--color-success);
+        }
+
+        .glucose-value.high {
+            color: var(--color-warning);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: var(--spacing-sm);
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .card {
+                padding: var(--spacing-md);
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            td, th {
+                padding: var(--spacing-sm);
+            }
+
+            button {
+                min-width: 100px;
+                font-size: 14px;
+            }
+
+            .app-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="login-page">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>📊 Blood Sugar Tracker</h1>
+                <p style="color: var(--color-text-light);">Multi-User Edition</p>
+            </div>
+
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="switchLoginTab('login')">Login</button>
+                <button class="login-tab" onclick="switchLoginTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form class="login-form active" id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password">
+                </div>
+                <button type="button" class="login-button" onclick="loginUser()">Login</button>
+            </form>
+
+            <!-- Register Form -->
+            <form class="login-form" id="register-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="register-username" placeholder="Create username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="register-password" placeholder="Create password">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="register-confirm" placeholder="Confirm password">
+                </div>
+                <button type="button" class="login-button" onclick="registerUser()">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP PAGE -->
+    <div id="app-page">
+        <div class="container">
+            <!-- User Header -->
+            <div class="app-header">
+                <div class="user-info">
+                    <p>Logged in as:</p>
+                    <strong id="current-username">User</strong>
+                </div>
+                <button class="logout-btn" onclick="logoutUser()">Logout</button>
+            </div>
+
+            <header>
+                <h1>📊 Blood Sugar Tracker</h1>
+                <p class="subtitle">Monitor your daily glucose levels and track trends</p>
+            </header>
+
+            <!-- Add Reading Section -->
+            <div class="card">
+                <h2 style="font-size: 18px; margin-bottom: var(--spacing-md);">➕ Add Reading</h2>
+                
+                <div class="input-group">
+                    <label for="reading-date">Date</label>
+                    <input type="date" id="reading-date">
+                </div>
+
+                <div class="input-group">
+                    <label for="reading-time">Time</label>
+                    <input type="time" id="reading-time">
+                </div>
+
+                <div class="input-group">
+                    <label for="glucose-level">Blood Sugar Level (mg/dL)</label>
+                    <input type="number" id="glucose-level" placeholder="Enter reading" min="40" max="400">
+                </div>
+
+                <div class="input-group">
+                    <label for="meal-type">Meal Timing</label>
+                    <select id="meal-type">
+                        <option value="">-- Select --</option>
+                        <option value="fasting">Fasting (Before meal)</option>
+                        <option value="after">After Meal</option>
+                        <option value="bedtime">Bedtime</option>
+                        <option value="random">Random</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="notes">Notes (optional)</label>
+                    <input type="text" id="notes" placeholder="e.g., had snacks, exercised">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="addReading()">Add Reading</button>
+                    <button class="btn-secondary" onclick="clearForm()">Clear</button>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="analytics-section" style="display: none;">
+                <div class="section-divider">
+                    <h2>📈 Analytics</h2>
+                </div>
+
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-label">Today's Latest</div>
+                        <div class="summary-value" id="latest-reading">--</div>
+                        <div class="summary-label" id="latest-time">--:--</div>
+                    </div>
+                    <div class="summary-card warning" id="avg-card">
+                        <div class="summary-label">Daily Average</div>
+                        <div class="summary-value" id="avg-reading">--</div>
+                        <div class="summary-label">All readings</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: var(--spacing-md);">📊 Glucose Trend Chart</h3>
+                    <div class="chart-container">
+                        <canvas id="glucose-chart"></canvas>
+                    </div>
+                    <p style="font-size: 13px; color: var(--color-text-light); text-align: center;">
+                        📈 Green zone: 80-130 mg/dL (Target range)
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: var(--spacing-md);">📝 Recent Readings</h3>
+                    <div class="readings-list" id="readings-list"></div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div id="history-section" style="display: none;">
+                <div class="section-divider">
+                    <h2>📋 Complete History</h2>
+                </div>
+
+                <div class="card">
+                    <div class="grid-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0)">Date</th>
+                                    <th onclick="sortTable(1)">Time</th>
+                                    <th onclick="sortTable(2)">Blood Sugar</th>
+                                    <th onclick="sortTable(3)">Meal Type</th>
+                                    <th onclick="sortTable(4)">Notes</th>
+                                    <th style="width: 40px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grid-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-success" onclick="exportDataJSON()">📥 Export JSON</button>
+                    <button class="btn-success" onclick="exportDataCSV()">📥 Export CSV</button>
+                </div>
+
+                <div style="text-align: center; margin: var(--spacing-lg) 0;">
+                    <button class="btn-danger" onclick="clearAllData()" style="max-width: 200px;">Clear All Data</button>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons at Bottom -->
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); flex-wrap: wrap;">
+                <button class="btn-primary" onclick="showSection('input')" style="flex: 1;">➕ Add Reading</button>
+                <button class="btn-secondary" onclick="showSection('analytics')" style="flex: 1;">📈 Analytics</button>
+                <button class="btn-secondary" onclick="showSection('history')" style="flex: 1;">📋 History</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let readings = [];
+        let sortConfig = { key: null, direction: 'asc' };
+        let currentUser = null;
+
+        // ===== LOGIN & AUTHENTICATION =====
+        function switchLoginTab(tab) {
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('register-form').classList.remove('active');
+            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'login') {
+                document.getElementById('login-form').classList.add('active');
+                document.querySelectorAll('.login-tab')[0].classList.add('active');
+            } else {
+                document.getElementById('register-form').classList.add('active');
+                document.querySelectorAll('.login-tab')[1].classList.add('active');
+            }
+        }
+
+        function registerUser() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+
+            if (!username || !password || !confirm) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            if (password !== confirm) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (password.length < 4) {
+                alert('Password must be at least 4 characters');
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('bloodSugarUsers')) || {};
+
+            if (users[username]) {
+                alert('Username already exists!');
+                return;
+            }
+
+            users[username] = btoa(password);
+            localStorage.setItem('bloodSugarUsers', JSON.stringify(users));
+            alert('User registered! Now login.');
+            
+            document.getElementById('register-username').value = '';
+            document.getElementById('register-password').value = '';
+            document.getElementById('register-confirm').value = '';
+            switchLoginTab('login');
+        }
+
+        function loginUser() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                alert('Please enter username and password');
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('bloodSugarUsers')) || {};
+
+            if (!users[username] || users[username] !== btoa(password)) {
+                alert('Invalid username or password');
+                return;
+            }
+
+            currentUser = username;
+            localStorage.setItem('currentUser', username);
+            loadUserData();
+            showApp();
+        }
+
+        function logoutUser() {
+            if (confirm('Are you sure you want to logout?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                readings = [];
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+                document.getElementById('login-page').style.display = 'flex';
+                document.getElementById('app-page').style.display = 'none';
+            }
+        }
+
+        function showApp() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app-page').style.display = 'block';
+            document.getElementById('current-username').textContent = currentUser;
+            initializeDateTime();
+            updateDisplay();
+        }
+
+        // ===== USER DATA MANAGEMENT =====
+        function loadUserData() {
+            const key = 'glucoseReadings_' + currentUser;
+            readings = JSON.parse(localStorage.getItem(key)) || [];
+        }
+
+        function saveReadings() {
+            const key = 'glucoseReadings_' + currentUser;
+            localStorage.setItem(key, JSON.stringify(readings));
+        }
+
+        // ===== EXISTING FUNCTIONS (Modified) =====
+        function initializeDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('reading-date').value = `${year}-${month}-${day}`;
+            
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('reading-time').value = `${hours}:${minutes}`;
+        }
+
+        function getStatusClass(value) {
+            if (value < 70) return 'low';
+            if (value >= 80 && value <= 130) return 'normal';
+            return 'high';
+        }
+
+        function addReading() {
+            const glucoseLevel = parseFloat(document.getElementById('glucose-level').value);
+            const date = document.getElementById('reading-date').value;
+            const time = document.getElementById('reading-time').value;
+            const mealType = document.getElementById('meal-type').value;
+            const notes = document.getElementById('notes').value;
+
+            if (!glucoseLevel || !date || !time) {
+                alert('Please enter blood sugar level, date, and time');
+                return;
+            }
+
+            const reading = {
+                date: date,
+                time: time,
+                glucose: glucoseLevel,
+                mealType: mealType,
+                notes: notes,
+                id: Date.now()
+            };
+
+            readings.push(reading);
+            readings.sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+            saveReadings();
+
+            clearForm();
+            updateDisplay();
+            alert('Reading added successfully!');
+        }
+
+        function deleteReading(id) {
+            readings = readings.filter(r => r.id !== id);
+            saveReadings();
+            updateDisplay();
+        }
+
+        function clearForm() {
+            document.getElementById('glucose-level').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('meal-type').value = '';
+            initializeDateTime();
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all your readings? This cannot be undone.')) {
+                readings = [];
+                saveReadings();
+                updateDisplay();
+                alert('All data cleared!');
+            }
+        }
+
+        function exportDataJSON() {
+            if (readings.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const dataStr = JSON.stringify(readings, null, 2);
+            
+            try {
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `blood-sugar-${currentUser}-${new Date().toISOString().split('T')[0]}.json`;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                
+                setTimeout(() => {
+                    link.click();
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                }, 100);
+                
+                alert('Data exported as JSON!');
+            } catch (e) {
+                alert('Data: ' + dataStr);
+            }
+        }
+
+        function exportDataCSV() {
+            if (readings.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            let csvContent = 'Date,Time,Blood Sugar (mg/dL),Meal Type,Notes\n';
+            readings.forEach(r => {
+                const notes = r.notes ? `"${r.notes.replace(/"/g, '""')}"` : '';
+                csvContent += `${r.date},${r.time},${r.glucose},${r.mealType || ''},${notes}\n`;
+            });
+
+            try {
+                const dataBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `blood-sugar-${currentUser}-${new Date().toISOString().split('T')[0]}.csv`;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                
+                setTimeout(() => {
+                    link.click();
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                }, 100);
+                
+                alert('Data exported as CSV!');
+            } catch (e) {
+                alert('Data: ' + csvContent);
+            }
+        }
+
+        function updateDisplay() {
+            const analyticsSection = document.getElementById('analytics-section');
+            if (readings.length === 0) {
+                analyticsSection.style.display = 'none';
+                return;
+            }
+            analyticsSection.style.display = 'block';
+
+            const latestReading = readings[readings.length - 1];
+            document.getElementById('latest-reading').textContent = latestReading.glucose;
+            document.getElementById('latest-time').textContent = latestReading.time;
+
+            const avg = Math.round(readings.reduce((sum, r) => sum + r.glucose, 0) / readings.length);
+            document.getElementById('avg-reading').textContent = avg;
+            
+            const avgCard = document.getElementById('avg-card');
+            avgCard.className = 'summary-card ' + getStatusClass(avg);
+
+            updateReadingsList();
+            updateGrid();
+            updateChart();
+        }
+
+        function updateReadingsList() {
+            const list = document.getElementById('readings-list');
+            if (readings.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No readings yet</p></div>';
+                return;
+            }
+
+            list.innerHTML = readings.slice().reverse().map(r => {
+                const status = getStatusClass(r.glucose);
+                const statusIcon = status === 'low' ? '⬇️' : status === 'normal' ? '✅' : '⬆️';
+                const dateObj = new Date(r.date);
+                const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return `
+                    <div class="reading-item">
+                        <div>
+                            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                                <span class="status-indicator ${status}"></span>
+                                <span class="reading-value ${status}">${statusIcon} ${r.glucose} mg/dL</span>
+                            </div>
+                            <div class="reading-time">${formattedDate} at ${r.time} ${r.mealType ? '• ' + r.mealType : ''}</div>
+                            ${r.notes ? `<div class="reading-notes">📝 ${r.notes}</div>` : ''}
+                        </div>
+                        <button class="delete-btn" onclick="deleteReading(${r.id})">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateGrid() {
+            const tbody = document.getElementById('grid-body');
+            if (readings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--color-text-light);">No readings yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = readings.map(r => {
+                const status = getStatusClass(r.glucose);
+                const dateObj = new Date(r.date);
+                const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td>${r.time}</td>
+                        <td><span class="glucose-value ${status}">${r.glucose}</span></td>
+                        <td>${r.mealType || '-'}</td>
+                        <td>${r.notes || '-'}</td>
+                        <td><button class="delete-btn" onclick="deleteReading(${r.id})">×</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function sortTable(columnIndex) {
+            const keys = ['date', 'time', 'glucose', 'mealType', 'notes'];
+            const key = keys[columnIndex];
+
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'asc';
+            }
+
+            readings.sort((a, b) => {
+                let aVal = a[key];
+                let bVal = b[key];
+
+                if (key === 'glucose') {
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            updateGrid();
+        }
+
+        function updateChart() {
+            const canvas = document.getElementById('glucose-chart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const width = Math.max(canvas.parentElement.offsetWidth - 2, 1);
+            const height = 250;
+            
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+
+            const padding = 40;
+            const plotWidth = width - 2 * padding;
+            const plotHeight = height - 2 * padding;
+
+            const minY = 40;
+            const maxY = 400;
+            const range = maxY - minY;
+
+            const normalStart = (130 - minY) / range;
+            const normalEnd = (80 - minY) / range;
+
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
+            ctx.fillRect(padding, padding + plotHeight * (1 - normalStart), plotWidth, plotHeight * (normalStart - normalEnd));
+
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.1)';
+            ctx.fillRect(padding, padding, plotWidth, plotHeight * (1 - normalStart));
+
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+            ctx.fillRect(padding, padding + plotHeight * (1 - 0.15), plotWidth, plotHeight * 0.15);
+
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'right';
+
+            const gridLines = [80, 130, 180, 250, 350];
+            gridLines.forEach(value => {
+                const y = padding + plotHeight * (1 - (value - minY) / range);
+                ctx.strokeStyle = '#f3f4f6';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+
+                ctx.fillText(value, padding - 10, y + 4);
+            });
+
+            if (readings.length > 0) {
+                ctx.strokeStyle = '#208091';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                readings.forEach((reading, index) => {
+                    const x = padding + (index / (readings.length - 1 || 1)) * plotWidth;
+                    const y = padding + plotHeight * (1 - (reading.glucose - minY) / range);
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+
+                readings.forEach((reading, index) => {
+                    const x = padding + (index / (readings.length - 1 || 1)) * plotWidth;
+                    const y = padding + plotHeight * (1 - (reading.glucose - minY) / range);
+                    const status = getStatusClass(reading.glucose);
+
+                    ctx.fillStyle = status === 'normal' ? '#22c55e' : status === 'high' ? '#f59e0b' : '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            ctx.textAlign = 'center';
+            if (readings.length > 1) {
+                [0, Math.floor((readings.length - 1) / 2), readings.length - 1].forEach(index => {
+                    if (readings[index]) {
+                        const x = padding + (index / (readings.length - 1)) * plotWidth;
+                        ctx.fillText(readings[index].time, x, height - 15);
+                    }
+                });
+            }
+        }
+
+        function showSection(section) {
+            loadUserData();
+            
+            document.getElementById('analytics-section').style.display = 'none';
+            document.getElementById('history-section').style.display = 'none';
+
+            if (section === 'analytics') {
+                document.getElementById('analytics-section').style.display = 'block';
+                updateDisplay();
+                setTimeout(() => {
+                    updateChart();
+                }, 200);
+            } else if (section === 'history') {
+                document.getElementById('history-section').style.display = 'block';
+                updateGrid();
+            }
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('load', () => {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                loadUserData();
+                showApp();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            updateChart();
+        });
+        
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                updateChart();
+            }, 500);
+        });
+    </script>
+    
+    <!-- Service Worker Registration for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => {
+                        console.log('✅ Service Worker registered successfully');
+                    })
+                    .catch(err => {
+                        console.log('Service Worker registration failed:', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
